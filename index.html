@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Voice Recorder - Studio UI</title>
+<script src="https://cdn.tailwindcss.com/3.4.1"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { brand: { 50:'#f4f3ff',100:'#ecebff',200:'#d9d6fe',400:'#8b7cf7',500:'#6c5ce7',600:'#5b4dff',700:'#4839e0' } },
+    fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Inter','sans-serif'] }
+  }}
+}
+</script>
+<script src="https://unpkg.com/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+<style>
+  body { background-color:#e2e8f0; user-select:none; -webkit-user-select:none; }
+  .no-scrollbar::-webkit-scrollbar { display:none; }
+  .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+  @keyframes ring-pulse { 0%{transform:scale(1);opacity:.6} 50%{transform:scale(1.18);opacity:.2} 100%{transform:scale(1);opacity:.6} }
+  .pulse-ring { animation:ring-pulse 2.2s infinite ease-in-out; }
+  .app-screen { display:none; }
+  .app-screen.active { display:flex; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .sheet-enter { animation:slideUp .25s ease-out; }
+  @keyframes mic-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+  .mic-pulse { animation:mic-pulse 1.4s infinite ease-in-out; }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-0 md:p-4 font-sans antialiased">
+
+<div class="w-full max-w-[410px] h-[100vh] md:h-[840px] bg-white md:rounded-[44px] shadow-2xl overflow-hidden flex flex-col relative border-0 md:border-[8px] border-slate-900">
+
+  <!-- STATUS BAR -->
+  <div class="w-full px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-800 z-50 bg-transparent">
+    <span>9:41</span>
+    <div class="w-20 h-4 bg-slate-900 rounded-full mx-auto hidden md:block"></div>
+    <div class="flex items-center space-x-1.5">
+      <i data-lucide="signal" class="w-3.5 h-3.5"></i>
+      <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+      <i data-lucide="battery-charging" class="w-4 h-4"></i>
+    </div>
+  </div>
+
+  <div id="appViewport" class="flex-grow flex flex-col relative overflow-hidden bg-white">
+
+    <!-- 1. SPLASH -->
+    <section id="screen-splash" class="app-screen active flex-col items-center justify-between p-8 bg-white z-40 w-full h-full absolute inset-0">
+      <div class="flex-grow flex flex-col items-center justify-center">
+        <div class="w-32 h-32 rounded-full bg-brand-100 flex items-center justify-center mb-6">
+          <div class="w-24 h-24 rounded-full bg-brand-200/60 flex items-center justify-center">
+            <div class="w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/40">
+              <i data-lucide="mic" class="w-8 h-8 text-white"></i>
+            </div>
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900">Voice Recorder</h1>
+        <p class="text-xs font-medium text-slate-500 mt-1">Record • Play • Share</p>
+      </div>
+      <div class="w-full flex flex-col items-center gap-6">
+        <div class="w-6 h-6 rounded-full border-2 border-brand-500 border-t-transparent animate-spin"></div>
+        <svg viewBox="0 0 1440 320" class="w-full text-brand-100 fill-current opacity-80 -mb-8">
+          <path d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,165.3C960,181,1056,171,1152,149.3C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 2. ONBOARDING 1 -->
+    <section id="screen-onboarding-1" class="app-screen flex-col justify-between p-6 bg-white z-30 w-full h-full absolute inset-0">
+      <div class="flex-grow flex flex-col items-center justify-center text-center px-4">
+        <div class="w-48 h-48 rounded-3xl bg-brand-50 border border-brand-100 flex flex-col items-center justify-center p-6 mb-8">
+          <div class="p-4 bg-white rounded-2xl shadow-md mb-3 flex items-center space-x-3">
+            <div class="p-2 bg-brand-500 text-white rounded-xl"><i data-lucide="mic" class="w-5 h-5"></i></div>
+            <div class="flex items-center space-x-1 text-brand-500">
+              <span class="w-1 h-4 bg-brand-500 rounded"></span><span class="w-1 h-7 bg-brand-500 rounded"></span>
+              <span class="w-1 h-3 bg-brand-500 rounded"></span><span class="w-1 h-5 bg-brand-500 rounded"></span>
+            </div>
+            <div class="p-1.5 bg-brand-100 text-brand-600 rounded-full"><i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i></div>
+          </div>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900 mb-2">Easy Recording</h2>
+        <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Record your thoughts, meetings and more easily.</p>
+      </div>
+      <div class="w-full pb-6 flex flex-col items-center gap-6">
+        <div class="flex space-x-2"><span class="w-6 h-2 bg-brand-600 rounded-full"></span><span class="w-2 h-2 bg-slate-200 rounded-full"></span></div>
+        <button type="button" onclick="navigateTo('screen-onboarding-2')" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-2xl shadow-lg shadow-brand-500/30 transition active:scale-[0.98]">Next</button>
+        <button type="button" onclick="skipOnboarding()" class="text-xs text-slate-400 hover:text-slate-600">Skip</button>
+      </div>
+    </section>
+
+    <!-- 3. ONBOARDING 2 -->
+    <section id="screen-onboarding-2" class="app-screen flex-col justify-between p-6 bg-white z-30 w-full h-full absolute inset-0">
+      <div class="flex-grow flex flex-col items-center justify-center text-center px-4">
+        <div class="w-48 h-48 rounded-3xl bg-brand-50 border border-brand-100 flex flex-col items-center justify-center p-6 mb-8">
+          <div class="p-5 bg-brand-600 text-white rounded-2xl shadow-lg relative">
+            <i data-lucide="folder-closed" class="w-12 h-12"></i>
+            <div class="absolute -top-1 -right-1 bg-emerald-500 text-white p-1 rounded-full border-2 border-white"><i data-lucide="check" class="w-3.5 h-3.5"></i></div>
+          </div>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900 mb-2">Manage Your Files</h2>
+        <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Play, rename, delete and share recordings.</p>
+      </div>
+      <div class="w-full pb-6 flex flex-col items-center gap-6">
+        <div class="flex space-x-2"><span class="w-2 h-2 bg-slate-200 rounded-full"></span><span class="w-6 h-2 bg-brand-600 rounded-full"></span></div>
+        <button type="button" onclick="finishOnboarding()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-2xl shadow-lg shadow-brand-500/30 transition active:scale-[0.98]">Get Started</button>
+      </div>
+    </section>
+
+    <!-- 4. HOME -->
+    <section id="screen-home" class="app-screen flex-col justify-between pb-20 bg-white overflow-y-auto no-scrollbar w-full h-full absolute inset-0">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-lg font-bold text-slate-900">Voice Recorder</h2>
+          <button type="button" onclick="navigateTo('screen-settings')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition"><i data-lucide="settings" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="flex flex-col items-center justify-center py-8">
+          <div class="relative flex items-center justify-center">
+            <div class="absolute w-44 h-44 rounded-full bg-brand-100 pulse-ring"></div>
+            <button type="button" id="homeMicBtn" onclick="startRecordingFlow()" class="relative w-32 h-32 rounded-full bg-gradient-to-tr from-brand-600 to-brand-500 text-white shadow-xl shadow-brand-500/40 flex items-center justify-center transform active:scale-95 transition">
+              <i data-lucide="mic" class="w-12 h-12"></i>
+            </button>
+          </div>
+          <span id="homeMicLabel" class="text-xs font-semibold text-slate-600 mt-6 tracking-wide">Tap to Record</span>
+        </div>
+
+        <div class="mt-8">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-xs font-bold text-slate-900">My Recordings</h3>
+            <button type="button" onclick="switchTab('files')" class="text-xs font-semibold text-brand-600 hover:underline">See All &gt;</button>
+          </div>
+          <div id="homeRecentTrack" class="p-3.5 bg-brand-50 border border-brand-100 rounded-2xl flex items-center justify-between hover:bg-brand-100/50 transition">
+            <div class="flex items-center space-x-3 min-w-0 cursor-pointer flex-1" onclick="playRecentFromHome()">
+              <div class="p-2 bg-brand-200/60 rounded-xl text-brand-600 shrink-0"><i data-lucide="activity" class="w-5 h-5"></i></div>
+              <div class="min-w-0">
+                <h4 id="recentTitle" class="text-xs font-bold text-slate-900 truncate">No recordings yet</h4>
+                <p id="recentDuration" class="text-[10px] text-slate-500">Tap mic to record</p>
+              </div>
+            </div>
+            <button type="button" id="recentMenuBtn" onclick="openRecentMenu(event)" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full shrink-0 hidden">
+              <i data-lucide="more-vertical" class="w-4 h-4"></i>
+            </button>
+            <button type="button" id="recentPlayBtn" onclick="playRecentFromHome(event)" class="p-2.5 bg-brand-600 text-white rounded-full shadow-md shadow-brand-500/20 hover:scale-105 transition shrink-0 hidden ml-1">
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. RECORDING -->
+    <section id="screen-recording" class="app-screen flex-col justify-between p-6 bg-white z-40 w-full h-full absolute inset-0">
+      <div class="flex justify-between items-center">
+        <button type="button" onclick="cancelRecording()" class="p-2 text-slate-600 hover:bg-slate-100 rounded-full"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <span class="text-xs font-semibold text-slate-400">Recording...</span>
+        <div class="w-5"></div>
+      </div>
+      <div class="flex-grow flex flex-col items-center justify-center">
+        <h2 id="recordingTimer" class="text-4xl font-extrabold text-slate-900 font-mono tracking-tight mb-8">00:00:00</h2>
+        <div class="w-full h-32 flex items-center justify-center px-4 relative">
+          <canvas id="liveWaveCanvas" class="w-full h-full block"></canvas>
+        </div>
+      </div>
+      <div class="flex items-center justify-around pb-8 px-4">
+        <button type="button" onclick="cancelRecording()" class="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button type="button" id="recordingPauseBtn" onclick="togglePauseRecording()" class="w-16 h-16 rounded-full bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 transition transform active:scale-95">
+          <i data-lucide="pause" id="recordingPauseIcon" class="w-6 h-6 fill-current"></i>
+        </button>
+        <button type="button" onclick="stopAndSaveRecording()" class="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center transition"><i data-lucide="check" class="w-5 h-5"></i></button>
+      </div>
+    </section>
+
+    <!-- 6. FILES -->
+    <section id="screen-files" class="app-screen flex-col justify-between pb-20 bg-white w-full h-full absolute inset-0">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-lg font-bold text-slate-900">My Recordings</h2>
+          <div class="flex space-x-1 text-slate-600">
+            <button type="button" id="searchToggleBtn" onclick="toggleSearch()" class="p-1.5 hover:bg-slate-100 rounded-lg"><i data-lucide="search" class="w-5 h-5"></i></button>
+            <button type="button" onclick="toggleSortMenu()" class="p-1.5 hover:bg-slate-100 rounded-lg"><i data-lucide="more-vertical" class="w-5 h-5"></i></button>
+          </div>
+        </div>
+        <div id="searchBox" class="hidden mb-3">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="searchInput" type="text" placeholder="Search recordings..." oninput="renderRecordingsList()" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div id="sortMenu" class="hidden mb-3 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+          <button type="button" onclick="setSort('date-desc')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-slate-50">Newest first</button>
+          <button type="button" onclick="setSort('date-asc')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-slate-50 border-t border-slate-100">Oldest first</button>
+          <button type="button" onclick="setSort('name-asc')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-slate-50 border-t border-slate-100">Name A → Z</button>
+          <button type="button" onclick="setSort('name-desc')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-slate-50 border-t border-slate-100">Name Z → A</button>
+        </div>
+        <div id="fullRecordingsList" class="space-y-3 mt-2 max-h-[560px] overflow-y-auto no-scrollbar pr-1"></div>
+      </div>
+    </section>
+
+    <!-- 7. PLAYBACK -->
+    <section id="screen-playback" class="app-screen flex-col justify-between p-6 bg-white z-40 w-full h-full absolute inset-0">
+      <div class="flex justify-between items-center">
+        <button type="button" onclick="navigateTo('screen-files')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-full"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <span class="text-xs font-semibold text-slate-900">Playback</span>
+        <button type="button" onclick="openPlaybackMenu(event)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-full"><i data-lucide="more-vertical" class="w-5 h-5"></i></button>
+      </div>
+      <div class="flex-grow flex flex-col items-center justify-center">
+        <div class="w-32 h-32 rounded-3xl bg-brand-100 flex items-center justify-center mb-6 shadow-inner"><i data-lucide="music" class="w-12 h-12 text-brand-600"></i></div>
+        <h3 id="playbackTitle" class="text-base font-bold text-slate-900">—</h3>
+        <p id="playbackMeta" class="text-xs text-slate-400 mt-1">— • —</p>
+        <div class="w-full mt-8 px-2">
+          <input type="range" id="playbackSeekBar" value="0" min="0" max="100" class="w-full accent-brand-600 cursor-pointer h-1 bg-slate-200 rounded-lg">
+          <div class="flex justify-between text-[10px] font-semibold text-slate-400 mt-1">
+            <span id="playbackCurrentTime">00:00</span><span id="playbackTotalTime">00:00</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between w-full px-4 mt-6">
+          <button type="button" id="shuffleBtn" onclick="toggleShuffle()" class="text-slate-400 hover:text-slate-700 transition"><i data-lucide="shuffle" class="w-4 h-4"></i></button>
+          <button type="button" onclick="seekBy(-5)" class="text-slate-700 hover:text-brand-600"><i data-lucide="skip-back" class="w-5 h-5 fill-current"></i></button>
+          <button type="button" id="playbackMainPlayBtn" onclick="toggleMainPlayback()" class="w-14 h-14 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 hover:scale-105 transition">
+            <i data-lucide="play" id="playbackMainIcon" class="w-6 h-6 fill-current ml-0.5"></i>
+          </button>
+          <button type="button" onclick="seekBy(5)" class="text-slate-700 hover:text-brand-600"><i data-lucide="skip-forward" class="w-5 h-5 fill-current"></i></button>
+          <button type="button" id="repeatBtn" onclick="toggleRepeat()" class="text-slate-400 hover:text-slate-700 transition"><i data-lucide="repeat" class="w-4 h-4"></i></button>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100">
+        <button type="button" onclick="navigateTo('screen-edit')" class="py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl flex flex-col items-center text-slate-700 transition"><i data-lucide="edit-3" class="w-4 h-4 mb-1"></i><span class="text-[10px] font-medium">Edit</span></button>
+        <button type="button" onclick="navigateTo('screen-share')" class="py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl flex flex-col items-center text-slate-700 transition"><i data-lucide="share-2" class="w-4 h-4 mb-1"></i><span class="text-[10px] font-medium">Share</span></button>
+        <button type="button" onclick="deleteCurrentPlayback()" class="py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl flex flex-col items-center text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4 mb-1"></i><span class="text-[10px] font-medium">Delete</span></button>
+      </div>
+    </section>
+
+    <!-- 8. EDIT -->
+    <section id="screen-edit" class="app-screen flex-col justify-between p-6 bg-white z-40 w-full h-full absolute inset-0">
+      <div class="flex justify-between items-center">
+        <button type="button" onclick="navigateTo('screen-playback')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-full"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <span class="text-xs font-semibold text-slate-900">Edit Recording</span>
+        <div class="w-5"></div>
+      </div>
+      <div class="flex-grow flex flex-col items-center justify-center">
+        <div class="w-full bg-brand-50 border border-brand-100 rounded-2xl p-4 relative">
+          <div class="flex items-center justify-center h-24 space-x-1 text-brand-500 mb-4" id="editWaveform"></div>
+          <div class="relative h-8">
+            <div class="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 bg-slate-200 rounded"></div>
+            <div id="trimHighlight" class="absolute top-1/2 -translate-y-1/2 h-1 bg-brand-500 rounded"></div>
+            <input id="trimStart" type="range" min="0" max="100" value="0" class="absolute w-full top-1/2 -translate-y-1/2 h-1 bg-transparent appearance-none" style="pointer-events:auto;accent-color:#5b4dff;">
+            <input id="trimEnd" type="range" min="0" max="100" value="100" class="absolute w-full top-1/2 -translate-y-1/2 h-1 bg-transparent appearance-none" style="pointer-events:auto;accent-color:#5b4dff;">
+          </div>
+        </div>
+        <div class="flex justify-between w-full text-[10px] text-slate-400 font-mono mt-2 px-1">
+          <span id="trimStartLabel">00:00</span><span id="trimEndLabel">00:00</span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 w-full mt-6">
+          <button type="button" onclick="applyTrim()" class="p-4 bg-slate-50 hover:bg-brand-50 rounded-2xl flex flex-col items-center justify-center border border-slate-100 text-slate-700 hover:text-brand-600 transition"><i data-lucide="scissors" class="w-5 h-5 mb-1"></i><span class="text-xs font-medium">Trim</span></button>
+          <button type="button" onclick="triggerRename()" class="p-4 bg-slate-50 hover:bg-brand-50 rounded-2xl flex flex-col items-center justify-center border border-slate-100 text-slate-700 hover:text-brand-600 transition"><i data-lucide="edit" class="w-5 h-5 mb-1"></i><span class="text-xs font-medium">Rename</span></button>
+          <button type="button" onclick="deleteCurrentPlayback()" class="p-4 bg-slate-50 hover:bg-red-50 rounded-2xl flex flex-col items-center justify-center border border-slate-100 text-slate-700 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-5 h-5 mb-1"></i><span class="text-xs font-medium">Delete</span></button>
+        </div>
+        <button type="button" onclick="resetTrim()" class="mt-4 text-xs text-slate-400 hover:text-slate-600">Reset trim</button>
+      </div>
+      <button type="button" onclick="saveEditChanges()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-2xl shadow-lg shadow-brand-500/30 transition active:scale-[0.98]">Save</button>
+    </section>
+
+    <!-- 9. SHARE -->
+    <section id="screen-share" class="app-screen flex-col justify-between p-6 bg-white z-40 w-full h-full absolute inset-0">
+      <div class="flex justify-between items-center">
+        <button type="button" onclick="navigateTo('screen-playback')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-full"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <span class="text-xs font-semibold text-slate-900">Share Recording</span>
+        <div class="w-5"></div>
+      </div>
+      <div class="flex-grow flex flex-col items-center justify-center text-center">
+        <div class="w-28 h-28 rounded-full bg-brand-100 flex items-center justify-center mb-6 text-brand-600 shadow-md"><i data-lucide="share-2" class="w-12 h-12"></i></div>
+        <p class="text-xs font-semibold text-slate-700">Share this recording with others</p>
+        <p id="shareTrackName" class="text-[10px] text-slate-400 mt-1">—</p>
+        <div class="flex items-center justify-center space-x-4 mt-8">
+          <button type="button" onclick="shareViaWhatsApp()" class="flex flex-col items-center space-y-1">
+            <div class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md"><i data-lucide="message-circle" class="w-6 h-6"></i></div>
+            <span class="text-[10px] text-slate-500">WhatsApp</span>
+          </button>
+          <button type="button" onclick="shareViaTelegram()" class="flex flex-col items-center space-y-1">
+            <div class="w-12 h-12 rounded-full bg-sky-500 text-white flex items-center justify-center shadow-md"><i data-lucide="send" class="w-5 h-5"></i></div>
+            <span class="text-[10px] text-slate-500">Telegram</span>
+          </button>
+          <button type="button" onclick="shareViaEmail()" class="flex flex-col items-center space-y-1">
+            <div class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><i data-lucide="mail" class="w-5 h-5"></i></div>
+            <span class="text-[10px] text-slate-500">Gmail</span>
+          </button>
+          <button type="button" onclick="copyShareLink()" class="flex flex-col items-center space-y-1">
+            <div class="w-12 h-12 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shadow-md"><i data-lucide="link" class="w-6 h-6"></i></div>
+            <span class="text-[10px] text-slate-500">Copy</span>
+          </button>
+        </div>
+      </div>
+      <button type="button" onclick="triggerSystemShare()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-2xl shadow-lg shadow-brand-500/30 transition active:scale-[0.98]">Share</button>
+    </section>
+
+    <!-- 10. SETTINGS -->
+    <section id="screen-settings" class="app-screen flex-col justify-between pb-20 bg-white overflow-y-auto no-scrollbar w-full h-full absolute inset-0">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-lg font-bold text-slate-900">Settings</h2>
+          <button type="button" onclick="navigateTo('screen-home')" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-4">
+          <button type="button" onclick="openQualityPicker()" class="w-full flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl cursor-pointer hover:bg-slate-100">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-brand-100 text-brand-600 rounded-xl"><i data-lucide="mic" class="w-5 h-5"></i></div>
+              <div class="text-left"><h4 class="text-xs font-bold text-slate-900">Recording Quality</h4><p id="qualityLabel" class="text-[10px] text-slate-400">High Quality (48kHz)</p></div>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+          </button>
+          <button type="button" onclick="openStoragePicker()" class="w-full flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl cursor-pointer hover:bg-slate-100">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-brand-100 text-brand-600 rounded-xl"><i data-lucide="folder" class="w-5 h-5"></i></div>
+              <div class="text-left"><h4 class="text-xs font-bold text-slate-900">Storage Location</h4><p id="storageLabel" class="text-[10px] text-slate-400">Internal Storage</p></div>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+          </button>
+          <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-brand-100 text-brand-600 rounded-xl"><i data-lucide="clock" class="w-5 h-5"></i></div>
+              <div><h4 class="text-xs font-bold text-slate-900">Auto Stop</h4><p class="text-[10px] text-slate-400">Auto stop after 5 minutes</p></div>
+            </div>
+            <input id="autoStopToggle" type="checkbox" class="w-5 h-5 accent-brand-600 cursor-pointer" onchange="toggleAutoStop(this.checked)">
+          </div>
+          <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-brand-100 text-brand-600 rounded-xl"><i data-lucide="bell" class="w-5 h-5"></i></div>
+              <div><h4 class="text-xs font-bold text-slate-900">Notifications</h4><p class="text-[10px] text-slate-400">Show toast notifications</p></div>
+            </div>
+            <input id="notifToggle" type="checkbox" class="w-5 h-5 accent-brand-600 cursor-pointer" onchange="toggleNotifications(this.checked)">
+          </div>
+          <button type="button" onclick="navigateTo('screen-about')" class="w-full flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl cursor-pointer hover:bg-slate-100">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-brand-100 text-brand-600 rounded-xl"><i data-lucide="info" class="w-5 h-5"></i></div>
+              <div class="text-left"><h4 class="text-xs font-bold text-slate-900">About App</h4></div>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+          </button>
+          <button type="button" onclick="openPrivacy()" class="w-full flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl cursor-pointer hover:bg-slate-100">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-brand-100 text-brand-600 rounded-xl"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+              <div class="text-left"><h4 class="text-xs font-bold text-slate-900">Privacy Policy</h4></div>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+          </button>
+          <div class="pt-4 border-t border-slate-100">
+            <p class="text-[10px] text-slate-400 mb-2 px-1">Quick Preview (Demo)</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="navigateTo('screen-onboarding-1')" class="py-2 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-600 hover:bg-slate-100">Onboarding 1</button>
+              <button type="button" onclick="navigateTo('screen-onboarding-2')" class="py-2 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-600 hover:bg-slate-100">Onboarding 2</button>
+              <button type="button" onclick="navigateTo('screen-recording')" class="py-2 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-600 hover:bg-slate-100">Recording</button>
+              <button type="button" onclick="navigateTo('screen-playback')" class="py-2 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-600 hover:bg-slate-100">Playback</button>
+              <button type="button" onclick="navigateTo('screen-edit')" class="py-2 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-600 hover:bg-slate-100">Edit</button>
+              <button type="button" onclick="navigateTo('screen-share')" class="py-2 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-600 hover:bg-slate-100">Share</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. ABOUT -->
+    <section id="screen-about" class="app-screen flex-col justify-between p-6 bg-white z-40 w-full h-full absolute inset-0">
+      <div class="flex justify-between items-center">
+        <button type="button" onclick="navigateTo('screen-settings')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-full"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <span class="text-xs font-semibold text-slate-900">About</span>
+        <div class="w-5"></div>
+      </div>
+      <div class="flex-grow flex flex-col items-center justify-center text-center px-4">
+        <div class="w-24 h-24 rounded-3xl bg-brand-600 text-white flex items-center justify-center mb-4 shadow-xl shadow-brand-500/30"><i data-lucide="mic" class="w-12 h-12"></i></div>
+        <h3 class="text-base font-bold text-slate-900">Voice Recorder</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Version 1.0.0</p>
+        <p class="text-xs text-slate-500 mt-6 max-w-xs leading-relaxed">A simple and easy voice recorder app for you.</p>
+        <div class="mt-12 text-xs text-slate-600 flex items-center justify-center space-x-1">
+          <span>Made with</span><i data-lucide="heart" class="w-3.5 h-3.5 text-red-500 fill-current"></i>
+          <span class="font-semibold text-slate-800">by Poorab Ahirwar</span>
+        </div>
+      </div>
+      <div class="-mx-6 -mb-6">
+        <svg viewBox="0 0 1440 320" class="w-full text-brand-100 fill-current">
+          <path d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,165.3C960,181,1056,171,1152,149.3C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottomNavBar" class="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-100 px-8 items-center justify-around z-30 hidden">
+    <button type="button" onclick="switchTab('home')" id="tab-home" class="nav-tab flex flex-col items-center text-brand-600 transition"><i data-lucide="home" class="w-5 h-5"></i><span class="text-[10px] font-medium mt-1">Home</span></button>
+    <button type="button" onclick="switchTab('files')" id="tab-files" class="nav-tab flex flex-col items-center text-slate-400 hover:text-slate-600 transition"><i data-lucide="folder" class="w-5 h-5"></i><span class="text-[10px] font-medium mt-1">Files</span></button>
+    <button type="button" onclick="switchTab('settings')" id="tab-settings" class="nav-tab flex flex-col items-center text-slate-400 hover:text-slate-600 transition"><i data-lucide="settings" class="w-5 h-5"></i><span class="text-[10px] font-medium mt-1">Settings</span></button>
+  </nav>
+
+  <audio id="globalAudioPlayer" class="hidden"></audio>
+
+  <!-- MIC MODAL -->
+  <div id="micPermissionModal" class="absolute inset-0 bg-black/60 z-[80] hidden items-center justify-center p-6">
+    <div class="w-full bg-white rounded-3xl shadow-2xl overflow-hidden sheet-enter text-center p-6">
+      <div class="relative w-24 h-24 mx-auto mb-5">
+        <div class="absolute inset-0 rounded-full bg-brand-100 mic-pulse"></div>
+        <div class="relative w-24 h-24 rounded-full bg-gradient-to-tr from-brand-600 to-brand-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/40"><i data-lucide="mic" class="w-10 h-10"></i></div>
+      </div>
+      <h3 class="text-lg font-bold text-slate-900 mb-1">Microphone Access</h3>
+      <p id="micPermissionText" class="text-xs text-slate-500 leading-relaxed">Allow microphone access so we can record your voice. Your recording stays on your device.</p>
+      <div id="micPermissionStatus" class="hidden mt-4 p-3 bg-red-50 border border-red-100 rounded-xl text-[11px] text-red-600 text-left"></div>
+      <div class="mt-6 space-y-2">
+        <button type="button" id="micAllowBtn" onclick="requestMicAndRecord()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-2xl shadow-lg shadow-brand-500/30 transition active:scale-[0.98] flex items-center justify-center gap-2">
+          <i data-lucide="mic" class="w-4 h-4"></i><span>Allow & Start Recording</span>
+        </button>
+        <button type="button" onclick="closeMicModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl transition text-sm">Not Now</button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-4">You can change this anytime in your browser settings.</p>
+    </div>
+  </div>
+
+  <!-- OPTIONS MENU (BOTTOM SHEET) -->
+  <div id="optionsMenuOverlay" class="absolute inset-0 bg-black/40 z-[60] hidden" onclick="closeOptionsMenu(event)">
+    <div id="optionsMenuSheet" class="absolute bottom-0 left-0 right-0 w-full bg-white rounded-t-3xl p-4 pb-6 sheet-enter" onclick="event.stopPropagation()">
+      <div class="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-3"></div>
+      <div class="flex items-center space-x-3 px-2 pb-3 border-b border-slate-100 mb-2">
+        <div class="p-2.5 bg-brand-100 text-brand-600 rounded-full shrink-0"><i data-lucide="music" class="w-4 h-4"></i></div>
+        <div class="min-w-0 flex-1">
+          <h4 id="optionsMenuTitle" class="text-sm font-bold text-slate-900 truncate">Track name</h4>
+          <p id="optionsMenuMeta" class="text-[10px] text-slate-400">00:00 • 0 MB</p>
+        </div>
+      </div>
+      <div class="space-y-1">
+        <button type="button" onclick="handleMenuRename(event)" class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition">
+          <div class="p-2 bg-brand-100 text-brand-600 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></div>
+          <span class="text-sm font-medium text-slate-800">Rename</span>
+        </button>
+        <button type="button" onclick="handleMenuShare(event)" class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition">
+          <div class="p-2 bg-brand-100 text-brand-600 rounded-lg"><i data-lucide="share-2" class="w-4 h-4"></i></div>
+          <span class="text-sm font-medium text-slate-800">Share</span>
+        </button>
+        <button type="button" onclick="handleMenuDelete(event)" class="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-red-50 active:bg-red-100 transition">
+          <div class="p-2 bg-red-100 text-red-600 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></div>
+          <span class="text-sm font-medium text-red-600">Delete</span>
+        </button>
+      </div>
+      <button type="button" onclick="closeOptionsMenu()" class="w-full mt-3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl transition text-sm">Cancel</button>
+    </div>
+  </div>
+
+  <!-- RENAME MODAL -->
+  <div id="renameModal" class="absolute inset-0 bg-black/60 z-[85] hidden items-center justify-center p-6">
+    <div class="w-full bg-white rounded-3xl shadow-2xl overflow-hidden sheet-enter p-6">
+      <div class="w-14 h-14 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mx-auto mb-4"><i data-lucide="edit-3" class="w-6 h-6"></i></div>
+      <h3 class="text-base font-bold text-slate-900 text-center mb-1">Rename Recording</h3>
+      <p class="text-[11px] text-slate-400 text-center mb-4">Enter a new name for this track</p>
+      <input id="renameInput" type="text" maxlength="60" placeholder="Track name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 mb-4">
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeRenameModal()" class="py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl transition text-sm">Cancel</button>
+        <button type="button" onclick="saveRename()" class="py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-2xl shadow-lg shadow-brand-500/30 transition text-sm">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirmModal" class="absolute inset-0 bg-black/60 z-[85] hidden items-center justify-center p-6">
+    <div class="w-full bg-white rounded-3xl shadow-2xl overflow-hidden sheet-enter p-6">
+      <div class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4"><i data-lucide="trash-2" class="w-6 h-6"></i></div>
+      <h3 id="confirmTitle" class="text-base font-bold text-slate-900 text-center mb-1">Delete Recording?</h3>
+      <p id="confirmMessage" class="text-[11px] text-slate-400 text-center mb-4">This action cannot be undone.</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeConfirmModal()" class="py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl transition text-sm">Cancel</button>
+        <button type="button" id="confirmYesBtn" onclick="confirmYes()" class="py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-2xl shadow-lg shadow-red-500/30 transition text-sm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PICKER MODAL -->
+  <div id="pickerOverlay" class="absolute inset-0 bg-black/40 z-[65] hidden items-center justify-center p-6" onclick="closePicker(event)">
+    <div class="w-full bg-white rounded-2xl shadow-2xl overflow-hidden sheet-enter" onclick="event.stopPropagation()">
+      <div class="px-5 py-4 border-b border-slate-100"><h3 id="pickerTitle" class="text-sm font-bold text-slate-900">Choose</h3></div>
+      <div id="pickerBody" class="p-2 max-h-80 overflow-y-auto"></div>
+      <div class="p-3 border-t border-slate-100">
+        <button type="button" onclick="closePicker()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="absolute top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-[90] flex items-center space-x-2">
+    <span id="toastText">Action completed</span>
+  </div>
+
+</div>
+
+<script>
+// ============ GLOBAL STATE ============
+var currentActivePlaybackTrack = null;
+var menuTargetTrack = null;
+var pendingDeleteTrack = null;
+var isRecording = false;
+var isPausedRecording = false;
+var isCancelled = false;
+var mediaRecorder = null;
+var audioChunks = [];
+var startTime = 0;
+var timerInterval = null;
+var pausedDuration = 0;
+var pauseStartTime = 0;
+var autoStopTimer = null;
+var audioContext = null;
+var analyser = null;
+var activeStream = null;
+var animFrameId = null;
+var toastTimer = null;
+var recordingsList = [];
+var isShuffle = false;
+var repeatMode = 0;
+var currentSort = 'date-desc';
+var settings = { quality:'high', storage:'internal', autoStop:false, notifications:true };
+
+// ============ SETTINGS ============
+function loadSettings() {
+  try { var s = localStorage.getItem('vr_settings'); if (s) settings = JSON.parse(s); } catch(e) {}
+  var q = document.getElementById('qualityLabel');
+  if (q) q.textContent = settings.quality==='high'?'High Quality (48kHz)':settings.quality==='medium'?'Medium Quality (24kHz)':'Low Quality (8kHz)';
+  var st = document.getElementById('storageLabel');
+  if (st) st.textContent = settings.storage==='internal'?'Internal Storage':settings.storage==='external'?'External Storage':'Cloud Storage';
+  var a = document.getElementById('autoStopToggle'); if (a) a.checked = settings.autoStop;
+  var n = document.getElementById('notifToggle'); if (n) n.checked = settings.notifications;
+}
+function saveSettings(){ try{localStorage.setItem('vr_settings', JSON.stringify(settings));}catch(e){} }
+
+// ============ DEMO TRACKS ============
+function ensureDemoTracks() {
+  if (recordingsList.length === 0) {
+    recordingsList = [
+      { id: 1001, title:'Meeting Notes', duration:'00:01:24', date:'05 Nov', size:'1.2 MB', url:'', createdAt:5 },
+      { id: 1002, title:'Lecture Audio', duration:'00:12:36', date:'04 Nov', size:'8.4 MB', url:'', createdAt:4 },
+      { id: 1003, title:'Personal Note', duration:'00:00:58', date:'03 Nov', size:'750 KB', url:'', createdAt:3 }
+    ];
+  }
+}
+
+// ============ NAVIGATION ============
+function navigateTo(screenId) {
+  document.querySelectorAll('.app-screen').forEach(function(s){ s.classList.remove('active'); s.style.display='none'; });
+  var t = document.getElementById(screenId);
+  if (!t) return;
+  t.classList.add('active'); t.style.display='flex';
+  var bn = document.getElementById('bottomNavBar');
+  if (['screen-home','screen-files','screen-settings'].indexOf(screenId)!==-1) { bn.classList.remove('hidden'); bn.style.display='flex'; }
+  else { bn.classList.add('hidden'); bn.style.display='none'; }
+  if (screenId==='screen-home') { highlightTab('tab-home'); updateHomeRecent(); updateMicButtonState(); }
+  if (screenId==='screen-files') { highlightTab('tab-files'); renderRecordingsList(); }
+  if (screenId==='screen-settings') { highlightTab('tab-settings'); loadSettings(); }
+  if (screenId==='screen-playback') refreshPlaybackUI();
+  if (screenId==='screen-edit') refreshEditUI();
+  if (screenId==='screen-share') refreshShareUI();
+}
+function switchTab(t){ if(t==='home')navigateTo('screen-home'); if(t==='files'){renderRecordingsList();navigateTo('screen-files');} if(t==='settings')navigateTo('screen-settings'); }
+function highlightTab(id){ document.querySelectorAll('.nav-tab').forEach(function(x){x.classList.remove('text-brand-600');x.classList.add('text-slate-400');}); var a=document.getElementById(id); if(a){a.classList.remove('text-slate-400');a.classList.add('text-brand-600');} }
+function finishOnboarding(){ try{localStorage.setItem('hasSeenOnboarding','true');}catch(e){} navigateTo('screen-home'); }
+function skipOnboarding(){ try{localStorage.setItem('hasSeenOnboarding','true');}catch(e){} navigateTo('screen-home'); }
+
+// ============ MIC PERMISSION ============
+function updateMicButtonState() {
+  var l = document.getElementById('homeMicLabel');
+  if (!l) return;
+  if (!navigator.permissions || !navigator.permissions.query) { l.textContent='Tap to Record'; return; }
+  navigator.permissions.query({name:'microphone'}).then(function(s){
+    if (s.state==='granted') l.textContent='Tap to Record';
+    else if (s.state==='denied') l.textContent='Mic blocked — check settings';
+    else l.textContent='Tap to Record';
+    s.onchange = updateMicButtonState;
+  }).catch(function(){ l.textContent='Tap to Record'; });
+}
+function startRecordingFlow() {
+  if (isRecording) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showMicModalError('Your browser does not support microphone access. Use Chrome/Edge/Firefox on localhost or HTTPS.');
+    return;
+  }
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({name:'microphone'}).then(function(s){
+      if (s.state==='granted') actuallyStartRecording();
+      else if (s.state==='denied') showMicModalError('Microphone is blocked. Click the 🔒 lock icon in the address bar → Allow Microphone → reload.');
+      else openMicModal();
+    }).catch(function(){ openMicModal(); });
+  } else actuallyStartRecording();
+}
+function openMicModal() {
+  var m = document.getElementById('micPermissionModal');
+  var st = document.getElementById('micPermissionStatus');
+  var tx = document.getElementById('micPermissionText');
+  var b = document.getElementById('micAllowBtn');
+  st.classList.add('hidden');
+  tx.textContent = 'Allow microphone access so we can record your voice. Your recording stays on your device.';
+  b.disabled = false;
+  b.innerHTML = '<i data-lucide="mic" class="w-4 h-4"></i><span>Allow & Start Recording</span>';
+  if (window.lucide) lucide.createIcons();
+  m.classList.remove('hidden'); m.style.display='flex';
+}
+function closeMicModal(){ var m=document.getElementById('micPermissionModal'); m.classList.add('hidden'); m.style.display='none'; }
+function showMicModalError(msg) {
+  openMicModal();
+  var st = document.getElementById('micPermissionStatus');
+  st.textContent = msg; st.classList.remove('hidden');
+  var b = document.getElementById('micAllowBtn');
+  b.disabled = false;
+  b.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4"></i><span>Try Again</span>';
+  if (window.lucide) lucide.createIcons();
+}
+function requestMicAndRecord() {
+  var b = document.getElementById('micAllowBtn');
+  var st = document.getElementById('micPermissionStatus');
+  var tx = document.getElementById('micPermissionText');
+  st.classList.add('hidden');
+  b.disabled = true;
+  b.innerHTML = '<div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div><span>Waiting...</span>';
+  tx.textContent = 'Click "Allow" in the browser popup. Recording will start automatically.';
+  actuallyStartRecording(true);
+}
+function actuallyStartRecording(fromModal) {
+  if (isRecording) return;
+  isCancelled = false; audioChunks = [];
+  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true } })
+    .then(function(stream) {
+      closeMicModal();
+      activeStream = stream;
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        audioContext.createMediaStreamSource(stream).connect(analyser);
+      } catch(e) { console.warn(e); }
+      var mt = 'audio/webm';
+      if (typeof MediaRecorder !== 'undefined' && !MediaRecorder.isTypeSupported(mt)) { mt='audio/mp4'; if(!MediaRecorder.isTypeSupported(mt)) mt=''; }
+      try { mediaRecorder = new MediaRecorder(stream, mt ? {mimeType:mt} : undefined); }
+      catch(e) { try { mediaRecorder = new MediaRecorder(stream); } catch(e2){ showToast('MediaRecorder not supported'); cleanupRecordingResources(); return; } }
+      mediaRecorder.ondataavailable = function(e){ if (e.data && e.data.size>0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = saveNewRecording;
+      mediaRecorder.start();
+      isRecording = true; isPausedRecording = false;
+      startTime = Date.now(); pausedDuration = 0;
+      var ic = document.getElementById('recordingPauseIcon');
+      if (ic) ic.setAttribute('data-lucide','pause');
+      if (window.lucide) lucide.createIcons();
+      if (settings.autoStop) {
+        clearTimeout(autoStopTimer);
+        autoStopTimer = setTimeout(function(){ if (isRecording) { showToast('Auto-stopped'); stopAndSaveRecording(); } }, 5*60*1000);
+      }
+      navigateTo('screen-recording'); startRecordingTimer(); drawLiveWaveform();
+      showToast('🎙️ Recording Started');
+    })
+    .catch(function(err) {
+      console.error(err);
+      var msg = '';
+      if (err.name==='NotAllowedError'||err.name==='PermissionDeniedError') msg='❌ Permission denied. Click the 🔒 lock icon → Allow Microphone → reload.';
+      else if (err.name==='NotFoundError'||err.name==='DevicesNotFoundError') msg='❌ No microphone found. Connect a mic and retry.';
+      else if (err.name==='NotReadableError'||err.name==='TrackStartError') msg='❌ Microphone is in use by another app.';
+      else if (err.name==='SecurityError'||window.location.protocol==='file:') msg='❌ Microphone requires HTTPS or localhost. Use http://localhost:8000.';
+      else msg='❌ Could not access mic: '+err.message;
+      if (fromModal) showMicModalError(msg);
+      else { openMicModal(); setTimeout(function(){ showMicModalError(msg); }, 50); }
+      cleanupRecordingResources();
+    });
+}
+
+// ============ RECORDING ============
+function startRecordingTimer() {
+  var t = document.getElementById('recordingTimer');
+  clearInterval(timerInterval);
+  if (t) t.textContent='00:00:00';
+  timerInterval = setInterval(function(){
+    if (!isPausedRecording && t) t.textContent = formatMs(Date.now() - startTime - pausedDuration);
+  }, 200);
+}
+function formatMs(ms){ var t=Math.floor(ms/1000),s=t%60,m=Math.floor(t/60)%60,h=Math.floor(t/3600); return pad(h)+':'+pad(m)+':'+pad(s); }
+function pad(n){ return n<10?'0'+n:''+n; }
+function togglePauseRecording() {
+  if (!mediaRecorder) return;
+  var ic = document.getElementById('recordingPauseIcon');
+  if (isPausedRecording) {
+    if (mediaRecorder.state==='paused') mediaRecorder.resume();
+    pausedDuration += Date.now() - pauseStartTime;
+    isPausedRecording = false;
+    if (ic) ic.setAttribute('data-lucide','pause');
+    showToast('Recording Resumed');
+  } else {
+    if (mediaRecorder.state==='recording') mediaRecorder.pause();
+    pauseStartTime = Date.now();
+    isPausedRecording = true;
+    if (ic) ic.setAttribute('data-lucide','play');
+    showToast('Recording Paused');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+function cancelRecording() {
+  isCancelled = true;
+  if (mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  clearTimeout(autoStopTimer);
+  cleanupRecordingResources();
+  navigateTo('screen-home');
+  showToast('Recording Cancelled');
+}
+function stopAndSaveRecording() {
+  isCancelled = false;
+  if (mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  else { cleanupRecordingResources(); navigateTo('screen-home'); }
+  clearTimeout(autoStopTimer);
+  showToast('Recording Saved');
+}
+function saveNewRecording() {
+  if (isCancelled) { isCancelled=false; cleanupRecordingResources(); return; }
+  var elapsed = startTime ? (Date.now()-startTime-pausedDuration) : 0;
+  var blob = new Blob(audioChunks, {type:(mediaRecorder&&mediaRecorder.mimeType)||'audio/webm'});
+  if (blob.size===0) { cleanupRecordingResources(); showToast('No audio recorded'); navigateTo('screen-home'); return; }
+  var url = URL.createObjectURL(blob);
+  var newTrack = {
+    id: Date.now(),
+    title: 'Rec ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+    duration: formatMs(elapsed),
+    date: 'Today',
+    size: (blob.size/1024/1024).toFixed(2)+' MB',
+    url: url, createdAt: Date.now()
+  };
+  recordingsList.unshift(newTrack);
+  currentActivePlaybackTrack = newTrack;
+  cleanupRecordingResources();
+  renderRecordingsList(); updateHomeRecent();
+  navigateTo('screen-files');
+}
+function cleanupRecordingResources() {
+  clearInterval(timerInterval); timerInterval=null;
+  isRecording=false; isPausedRecording=false;
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId=null; }
+  if (activeStream) { activeStream.getTracks().forEach(function(t){t.stop();}); activeStream=null; }
+  if (audioContext && audioContext.state!=='closed') { try{audioContext.close();}catch(e){} audioContext=null; }
+  analyser=null; mediaRecorder=null; audioChunks=[];
+}
+function drawLiveWaveform() {
+  var c = document.getElementById('liveWaveCanvas');
+  if (!c) return;
+  var ctx = c.getContext('2d');
+  c.width = c.parentElement.clientWidth;
+  c.height = c.parentElement.clientHeight;
+  var bl = analyser ? analyser.frequencyBinCount : 32;
+  var da = new Uint8Array(bl);
+  function render() {
+    if (!isRecording) return;
+    animFrameId = requestAnimationFrame(render);
+    if (analyser) analyser.getByteFrequencyData(da);
+    ctx.clearRect(0,0,c.width,c.height);
+    var bw = (c.width/bl)*2, x=0;
+    for (var i=0;i<bl;i++) {
+      var bh = analyser ? (da[i]/255)*c.height : Math.random()*c.height*0.6;
+      ctx.fillStyle='#6c5ce7';
+      ctx.fillRect(x,(c.height-bh)/2,bw-2,bh);
+      x += bw;
+    }
+  }
+  render();
+}
+
+// ============ HOME ============
+function updateHomeRecent() {
+  var t = document.getElementById('recentTitle');
+  var d = document.getElementById('recentDuration');
+  var p = document.getElementById('recentPlayBtn');
+  var m = document.getElementById('recentMenuBtn');
+  if (!t) return;
+  if (recordingsList.length>0) {
+    t.textContent = recordingsList[0].title;
+    d.textContent = recordingsList[0].duration;
+    if (p) p.classList.remove('hidden');
+    if (m) m.classList.remove('hidden');
+  } else {
+    t.textContent = 'No recordings yet';
+    d.textContent = 'Tap mic to record';
+    if (p) p.classList.add('hidden');
+    if (m) m.classList.add('hidden');
+  }
+}
+function playRecentFromHome(e){ if(e)e.stopPropagation(); if(recordingsList.length===0){showToast('No recordings yet');return;} openPlaybackScreen(recordingsList[0].id); }
+function openRecentMenu(e){ if(e)e.stopPropagation(); if(recordingsList.length===0)return; openOptionsMenu(recordingsList[0].id, e); }
+
+// ============ SEARCH & SORT ============
+function toggleSearch() {
+  var b = document.getElementById('searchBox');
+  var i = document.getElementById('searchInput');
+  if (b.classList.contains('hidden')) { b.classList.remove('hidden'); if(i){i.value='';i.focus();} }
+  else { b.classList.add('hidden'); if(i)i.value=''; renderRecordingsList(); }
+  if (window.lucide) lucide.createIcons();
+}
+function toggleSortMenu(){ document.getElementById('sortMenu').classList.toggle('hidden'); if(window.lucide)lucide.createIcons(); }
+function setSort(s){ currentSort=s; document.getElementById('sortMenu').classList.add('hidden'); renderRecordingsList(); showToast('Sorted'); }
+function getSortedList() {
+  var l = recordingsList.slice();
+  if (currentSort==='date-desc') l.sort(function(a,b){return (b.createdAt||b.id)-(a.createdAt||a.id);});
+  else if (currentSort==='date-asc') l.sort(function(a,b){return (a.createdAt||a.id)-(b.createdAt||b.id);});
+  else if (currentSort==='name-asc') l.sort(function(a,b){return a.title.localeCompare(b.title);});
+  else if (currentSort==='name-desc') l.sort(function(a,b){return b.title.localeCompare(a.title);});
+  return l;
+}
+
+// ============ FILES LIST ============
+function renderRecordingsList() {
+  var c = document.getElementById('fullRecordingsList');
+  if (!c) return;
+  c.innerHTML = '';
+  var sv = '';
+  var si = document.getElementById('searchInput');
+  if (si) sv = si.value.trim().toLowerCase();
+  var list = getSortedList();
+  if (sv) list = list.filter(function(i){return i.title.toLowerCase().indexOf(sv)!==-1;});
+  if (list.length===0) {
+    c.innerHTML = '<div class="text-center text-xs text-slate-400 py-10">'+(sv?'No results':'No recordings yet. Tap mic to start.')+'</div>';
+    return;
+  }
+  list.forEach(function(item) {
+    var card = document.createElement('div');
+    card.className = 'p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between hover:bg-brand-50/50 transition';
+    card.innerHTML =
+      '<div class="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer" onclick="openPlaybackScreen('+item.id+')">' +
+        '<div class="p-2.5 bg-brand-100 text-brand-600 rounded-full shrink-0"><i data-lucide="play" class="w-4 h-4 fill-current"></i></div>' +
+        '<div class="min-w-0"><h4 class="text-xs font-bold text-slate-900 truncate">'+escapeHtml(item.title)+'</h4>' +
+        '<p class="text-[10px] text-slate-400">'+item.duration+' • '+item.date+' • '+item.size+'</p></div>' +
+      '</div>' +
+      '<button type="button" onclick="openOptionsMenu('+item.id+', event)" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full shrink-0"><i data-lucide="more-vertical" class="w-4 h-4"></i></button>';
+    c.appendChild(card);
+  });
+  if (window.lucide) lucide.createIcons();
+}
+function escapeHtml(str){ return String(str).replace(/[&<>"']/g,function(s){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s];}); }
+
+// ============ OPTIONS MENU ============
+function openOptionsMenu(trackId, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  var track = null;
+  for (var i=0;i<recordingsList.length;i++) if (recordingsList[i].id===trackId) { track = recordingsList[i]; break; }
+  if (!track) { showToast('Recording not found'); return; }
+  menuTargetTrack = track;
+  document.getElementById('optionsMenuTitle').textContent = track.title;
+  document.getElementById('optionsMenuMeta').textContent = track.duration+' • '+track.size;
+  var ov = document.getElementById('optionsMenuOverlay');
+  ov.classList.remove('hidden'); ov.style.display='flex';
+  if (window.lucide) lucide.createIcons();
+}
+function closeOptionsMenu(event) {
+  if (event && event.target && event.target.id !== 'optionsMenuOverlay') {
+    if (event.target.closest && event.target.closest('#optionsMenuSheet')) return;
+  }
+  var ov = document.getElementById('optionsMenuOverlay');
+  ov.classList.add('hidden'); ov.style.display='none';
+}
+
+// ============ HANDLERS — RENAME / SHARE / DELETE ============
+
+function handleMenuRename(event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (!menuTargetTrack) { showToast('No track selected'); return; }
+  var track = menuTargetTrack;
+  closeOptionsMenu();
+  // Open rename modal
+  var modal = document.getElementById('renameModal');
+  var input = document.getElementById('renameInput');
+  input.value = track.title;
+  modal.classList.remove('hidden'); modal.style.display='flex';
+  if (window.lucide) lucide.createIcons();
+  setTimeout(function(){ input.focus(); input.select(); }, 100);
+}
+
+function closeRenameModal() {
+  var m = document.getElementById('renameModal');
+  m.classList.add('hidden'); m.style.display='none';
+}
+
+function saveRename() {
+  if (!menuTargetTrack) { closeRenameModal(); return; }
+  var input = document.getElementById('renameInput');
+  var nn = input.value.trim();
+  if (!nn) { showToast('Name cannot be empty'); return; }
+  var track = menuTargetTrack;
+  track.title = nn;
+  // Persist
+  try { localStorage.setItem('vr_track_'+track.id+'_title', nn); } catch(e) {}
+  closeRenameModal();
+  renderRecordingsList();
+  updateHomeRecent();
+  if (currentActivePlaybackTrack && currentActivePlaybackTrack.id === track.id) refreshPlaybackUI();
+  if (document.getElementById('shareTrackName')) refreshShareUI();
+  showToast('✅ Renamed to "' + nn + '"');
+  menuTargetTrack = null;
+}
+
+function handleMenuShare(event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (!menuTargetTrack) { showToast('No track selected'); return; }
+  var track = menuTargetTrack;
+  currentActivePlaybackTrack = track;
+  closeOptionsMenu();
+  showToast('Opening share options...');
+  setTimeout(function() {
+    refreshShareUI();
+    navigateTo('screen-share');
+  }, 200);
+}
+
+function handleMenuDelete(event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (!menuTargetTrack) { showToast('No track selected'); return; }
+  var track = menuTargetTrack;
+  closeOptionsMenu();
+  // Open confirm modal
+  pendingDeleteTrack = track;
+  var modal = document.getElementById('confirmModal');
+  document.getElementById('confirmTitle').textContent = 'Delete "' + track.title + '"?';
+  document.getElementById('confirmMessage').textContent = 'This recording will be permanently removed.';
+  modal.classList.remove('hidden'); modal.style.display='flex';
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeConfirmModal() {
+  var m = document.getElementById('confirmModal');
+  m.classList.add('hidden'); m.style.display='none';
+  pendingDeleteTrack = null;
+}
+
+function confirmYes() {
+  if (!pendingDeleteTrack) { closeConfirmModal(); return; }
+  var track = pendingDeleteTrack;
+  // Pause audio if same track
+  var audio = document.getElementById('globalAudioPlayer');
+  if (currentActivePlaybackTrack && currentActivePlaybackTrack.id === track.id) {
+    audio.pause(); audio.src='';
+    currentActivePlaybackTrack = null;
+  }
+  // Revoke blob
+  if (track.url && track.url.indexOf('blob:')===0) URL.revokeObjectURL(track.url);
+  // Remove
+  var newList = [];
+  for (var i=0;i<recordingsList.length;i++) if (recordingsList[i].id !== track.id) newList.push(recordingsList[i]);
+  recordingsList = newList;
+  closeConfirmModal();
+  renderRecordingsList();
+  updateHomeRecent();
+  showToast('🗑️ Deleted "' + track.title + '"');
+}
+
+// ============ PLAYBACK ============
+function openPlaybackScreen(trackId) {
+  var track = null;
+  for (var i=0;i<recordingsList.length;i++) if (recordingsList[i].id===trackId) { track = recordingsList[i]; break; }
+  if (!track) { showToast('Recording not found'); return; }
+  currentActivePlaybackTrack = track;
+  refreshPlaybackUI();
+  navigateTo('screen-playback');
+}
+function refreshPlaybackUI() {
+  if (!currentActivePlaybackTrack) { if (recordingsList.length>0) currentActivePlaybackTrack = recordingsList[0]; else return; }
+  document.getElementById('playbackTitle').textContent = currentActivePlaybackTrack.title;
+  document.getElementById('playbackMeta').textContent = currentActivePlaybackTrack.duration+' • '+currentActivePlaybackTrack.size;
+  document.getElementById('playbackTotalTime').textContent = currentActivePlaybackTrack.duration.substring(3)||'00:00';
+  document.getElementById('playbackCurrentTime').textContent = '00:00';
+  document.getElementById('playbackSeekBar').value = 0;
+  document.getElementById('playbackMainIcon').setAttribute('data-lucide','play');
+  updateShuffleRepeatUI();
+  if (window.lucide) lucide.createIcons();
+}
+function toggleMainPlayback() {
+  var ic = document.getElementById('playbackMainIcon');
+  var a = document.getElementById('globalAudioPlayer');
+  if (!currentActivePlaybackTrack) { showToast('No track'); return; }
+  if (!currentActivePlaybackTrack.url) { showToast('Demo track — no audio'); return; }
+  if (a.paused) {
+    if (a.src !== currentActivePlaybackTrack.url) a.src = currentActivePlaybackTrack.url;
+    a.play().then(function(){ ic.setAttribute('data-lucide','pause'); if(window.lucide)lucide.createIcons(); }).catch(function(){showToast('Playback failed');});
+  } else {
+    a.pause(); ic.setAttribute('data-lucide','play'); if(window.lucide)lucide.createIcons();
+  }
+}
+function seekBy(s) {
+  var a = document.getElementById('globalAudioPlayer');
+  if (a.duration && isFinite(a.duration)) { a.currentTime = Math.max(0, Math.min(a.duration, a.currentTime+s)); showToast((s>0?'Forward ':'Back ')+Math.abs(s)+'s'); }
+  else showToast('Seek unavailable (demo)');
+}
+function toggleShuffle(){ isShuffle=!isShuffle; updateShuffleRepeatUI(); showToast(isShuffle?'Shuffle: ON':'Shuffle: OFF'); }
+function toggleRepeat(){ repeatMode=(repeatMode+1)%3; updateShuffleRepeatUI(); showToast(repeatMode===0?'Repeat: OFF':repeatMode===1?'Repeat: ALL':'Repeat: ONE'); }
+function updateShuffleRepeatUI() {
+  var sb = document.getElementById('shuffleBtn'), rb = document.getElementById('repeatBtn');
+  if (!sb || !rb) return;
+  if (isShuffle) { sb.classList.remove('text-slate-400'); sb.classList.add('text-brand-600'); }
+  else { sb.classList.add('text-slate-400'); sb.classList.remove('text-brand-600'); }
+  rb.innerHTML = '<i data-lucide="'+(repeatMode===2?'repeat-1':'repeat')+'" class="w-4 h-4"></i>';
+  if (repeatMode>0) { rb.classList.remove('text-slate-400'); rb.classList.add('text-brand-600'); }
+  else { rb.classList.add('text-slate-400'); rb.classList.remove('text-brand-600'); }
+  if (window.lucide) lucide.createIcons();
+}
+function setupAudioEvents() {
+  var a = document.getElementById('globalAudioPlayer');
+  var sb = document.getElementById('playbackSeekBar');
+  var cur = document.getElementById('playbackCurrentTime');
+  var tot = document.getElementById('playbackTotalTime');
+  var ic = document.getElementById('playbackMainIcon');
+  a.addEventListener('timeupdate', function(){
+    if (!a.duration || !isFinite(a.duration)) return;
+    sb.value = (a.currentTime/a.duration)*100;
+    cur.textContent = formatSecs(a.currentTime);
+    tot.textContent = formatSecs(a.duration);
+  });
+  a.addEventListener('ended', function(){
+    ic.setAttribute('data-lucide','play'); if(window.lucide)lucide.createIcons();
+    if (repeatMode===2) { a.currentTime=0; a.play(); ic.setAttribute('data-lucide','pause'); if(window.lucide)lucide.createIcons(); }
+    else if (repeatMode===1 || isShuffle) playNextTrack();
+  });
+  sb.addEventListener('input', function(e){ if (a.duration && isFinite(a.duration)) a.currentTime = (e.target.value/100)*a.duration; });
+}
+function playNextTrack() {
+  if (recordingsList.length===0) return;
+  var idx = -1;
+  for (var i=0;i<recordingsList.length;i++) if (currentActivePlaybackTrack && recordingsList[i].id===currentActivePlaybackTrack.id) { idx=i; break; }
+  var nIdx = isShuffle && repeatMode!==1 ? Math.floor(Math.random()*recordingsList.length) : (idx+1)%recordingsList.length;
+  currentActivePlaybackTrack = recordingsList[nIdx];
+  refreshPlaybackUI();
+  var a = document.getElementById('globalAudioPlayer');
+  if (currentActivePlaybackTrack.url) {
+    a.src = currentActivePlaybackTrack.url;
+    a.play().then(function(){ document.getElementById('playbackMainIcon').setAttribute('data-lucide','pause'); if(window.lucide)lucide.createIcons(); }).catch(function(){});
+  }
+}
+function formatSecs(s){ s=Math.floor(s); return pad(Math.floor(s/60))+':'+pad(s%60); }
+function deleteCurrentPlayback() {
+  if (!currentActivePlaybackTrack) { showToast('Nothing'); navigateTo('screen-files'); return; }
+  pendingDeleteTrack = currentActivePlaybackTrack;
+  var modal = document.getElementById('confirmModal');
+  document.getElementById('confirmTitle').textContent = 'Delete "' + currentActivePlaybackTrack.title + '"?';
+  document.getElementById('confirmMessage').textContent = 'This recording will be permanently removed.';
+  modal.classList.remove('hidden'); modal.style.display='flex';
+  if (window.lucide) lucide.createIcons();
+}
+function openPlaybackMenu(e){ if(e){e.stopPropagation();e.preventDefault();} if(!currentActivePlaybackTrack){showToast('No track');return;} openOptionsMenu(currentActivePlaybackTrack.id, e); }
+
+// ============ EDIT ============
+function refreshEditUI() {
+  if (!currentActivePlaybackTrack) return;
+  var t = currentActivePlaybackTrack;
+  var w = document.getElementById('editWaveform');
+  w.innerHTML = '';
+  for (var i=0;i<40;i++) {
+    var bar = document.createElement('span');
+    bar.className = 'w-1 bg-brand-500 rounded';
+    bar.style.height = (15+Math.random()*70)+'px';
+    w.appendChild(bar);
+  }
+  document.getElementById('trimStart').value = 0;
+  document.getElementById('trimEnd').value = 100;
+  updateTrimLabels(); updateTrimHighlight();
+  document.getElementById('trimEndLabel').textContent = t.duration.substring(3)||'00:00';
+  document.getElementById('trimStartLabel').textContent = '00:00';
+  if (!document.getElementById('trimStart')._wired) {
+    document.getElementById('trimStart').addEventListener('input', function(){
+      if (parseInt(this.value) >= parseInt(document.getElementById('trimEnd').value)) this.value = parseInt(document.getElementById('trimEnd').value)-1;
+      updateTrimLabels(); updateTrimHighlight();
+    });
+    document.getElementById('trimEnd').addEventListener('input', function(){
+      if (parseInt(this.value) <= parseInt(document.getElementById('trimStart').value)) this.value = parseInt(document.getElementById('trimStart').value)+1;
+      updateTrimLabels(); updateTrimHighlight();
+    });
+    document.getElementById('trimStart')._wired = true;
+  }
+}
+function updateTrimLabels() {
+  if (!currentActivePlaybackTrack) return;
+  var s = parseInt(document.getElementById('trimStart').value);
+  var e = parseInt(document.getElementById('trimEnd').value);
+  var t = parseTimeToSecs(currentActivePlaybackTrack.duration);
+  document.getElementById('trimStartLabel').textContent = formatSecs(Math.floor(t*s/100));
+  document.getElementById('trimEndLabel').textContent = formatSecs(Math.floor(t*e/100));
+}
+function updateTrimHighlight() {
+  var s = parseInt(document.getElementById('trimStart').value);
+  var e = parseInt(document.getElementById('trimEnd').value);
+  var h = document.getElementById('trimHighlight');
+  h.style.left = s+'%'; h.style.width = (e-s)+'%';
+}
+function parseTimeToSecs(str){ var p=str.split(':').map(Number); if(p.length===3)return p[0]*3600+p[1]*60+p[2]; if(p.length===2)return p[0]*60+p[1]; return 0; }
+function resetTrim(){ document.getElementById('trimStart').value=0; document.getElementById('trimEnd').value=100; updateTrimLabels(); updateTrimHighlight(); }
+function applyTrim() {
+  if (!currentActivePlaybackTrack) return;
+  var s = parseInt(document.getElementById('trimStart').value);
+  var e = parseInt(document.getElementById('trimEnd').value);
+  if (s===0 && e===100) { showToast('No trim selected'); return; }
+  var t = parseTimeToSecs(currentActivePlaybackTrack.duration);
+  var n = Math.floor(t*(e-s)/100);
+  currentActivePlaybackTrack.duration = formatMs(n*1000);
+  showToast('Trimmed to '+formatSecs(n));
+  renderRecordingsList(); updateHomeRecent(); refreshEditUI();
+}
+function triggerRename() {
+  if (!currentActivePlaybackTrack) { showToast('No track'); return; }
+  menuTargetTrack = currentActivePlaybackTrack;
+  var m = document.getElementById('renameModal');
+  var i = document.getElementById('renameInput');
+  i.value = currentActivePlaybackTrack.title;
+  m.classList.remove('hidden'); m.style.display='flex';
+  if (window.lucide) lucide.createIcons();
+  setTimeout(function(){ i.focus(); i.select(); }, 100);
+}
+function saveEditChanges(){ showToast('Saved'); navigateTo('screen-playback'); }
+
+// ============ SHARE ============
+function refreshShareUI(){ var n=document.getElementById('shareTrackName'); if(n&&currentActivePlaybackTrack)n.textContent=currentActivePlaybackTrack.title; }
+function getShareText(){ return currentActivePlaybackTrack ? ('Check out my voice recording: ' + currentActivePlaybackTrack.title + ' (' + currentActivePlaybackTrack.duration + ')') : 'Voice Recorder'; }
+function shareViaWhatsApp(){ window.open('https://wa.me/?text='+encodeURIComponent(getShareText()),'_blank'); showToast('Opening WhatsApp...'); }
+function shareViaTelegram(){ window.open('https://t.me/share/url?url='+encodeURIComponent(window.location.href)+'&text='+encodeURIComponent(getShareText()),'_blank'); showToast('Opening Telegram...'); }
+function shareViaEmail(){ window.location.href='mailto:?subject='+encodeURIComponent('Voice Recording')+'&body='+encodeURIComponent(getShareText()); showToast('Opening Email...'); }
+function copyShareLink(){ var t=getShareText(); if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){showToast('Copied');}).catch(function(){fallbackCopy(t);});}else fallbackCopy(t); }
+function fallbackCopy(t){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');showToast('Copied');}catch(e){showToast('Copy failed');} document.body.removeChild(ta); }
+function triggerSystemShare() {
+  if (!currentActivePlaybackTrack) { showToast('Nothing'); return; }
+  if (!currentActivePlaybackTrack.url) { copyShareLink(); return; }
+  fetch(currentActivePlaybackTrack.url).then(function(r){return r.blob();}).then(function(blob){
+    var f = new File([blob], currentActivePlaybackTrack.title+'.webm', {type: blob.type||'audio/webm'});
+    if (navigator.canShare && navigator.canShare({files:[f]})) return navigator.share({files:[f], title: currentActivePlaybackTrack.title});
+    else if (navigator.share) return navigator.share({title: currentActivePlaybackTrack.title});
+    throw new Error('no-share');
+  }).catch(function(){ copyShareLink(); });
+}
+
+// ============ PICKERS ============
+function openPicker(title, options, cv, onSel) {
+  document.getElementById('pickerTitle').textContent = title;
+  var b = document.getElementById('pickerBody');
+  b.innerHTML = '';
+  options.forEach(function(opt){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition text-left';
+    btn.innerHTML = '<div><div class="text-xs font-bold text-slate-900">'+opt.label+'</div>'+(opt.desc?'<div class="text-[10px] text-slate-400 mt-0.5">'+opt.desc+'</div>':'')+'</div>'+(opt.value===cv?'<i data-lucide="check" class="w-4 h-4 text-brand-600"></i>':'');
+    btn.onclick = function(){ onSel(opt.value); closePicker(); };
+    b.appendChild(btn);
+  });
+  if (window.lucide) lucide.createIcons();
+  var o = document.getElementById('pickerOverlay');
+  o.classList.remove('hidden'); o.style.display='flex';
+}
+function closePicker(event){ if(event && event.target && event.target.closest('#pickerOverlay > div > div')) return; var o=document.getElementById('pickerOverlay'); o.classList.add('hidden'); o.style.display='none'; }
+function openQualityPicker(){ openPicker('Recording Quality',[{value:'low',label:'Low',desc:'8kHz'},{value:'medium',label:'Medium',desc:'24kHz'},{value:'high',label:'High',desc:'48kHz — best'}],settings.quality,function(v){settings.quality=v;saveSettings();loadSettings();showToast('Quality: '+v);}); }
+function openStoragePicker(){ openPicker('Storage Location',[{value:'internal',label:'Internal',desc:'On this device'},{value:'external',label:'External',desc:'SD card'},{value:'cloud',label:'Cloud',desc:'Sync'}],settings.storage,function(v){settings.storage=v;saveSettings();loadSettings();showToast('Storage: '+v);}); }
+function toggleAutoStop(c){ settings.autoStop=c; saveSettings(); showToast(c?'Auto Stop: ON':'Auto Stop: OFF'); }
+function toggleNotifications(c){ settings.notifications=c; saveSettings(); showToast(c?'Notifications: ON':'Notifications: OFF'); }
+function openPrivacy(){ openPicker('Privacy Policy',[{value:'1',label:'Your recordings stay on device',desc:'Nothing is uploaded.'},{value:'2',label:'Mic access only when recording',desc:'Revoke anytime.'},{value:'3',label:'No tracking or analytics',desc:'Your data is yours.'}],null,function(){}); }
+
+// ============ TOAST ============
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  var x = document.getElementById('toastText');
+  if (!t || !x) return;
+  x.textContent = msg;
+  t.classList.remove('opacity-0'); t.classList.add('opacity-100');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('opacity-100'); t.classList.add('opacity-0'); }, 2500);
+}
+
+// ============ INIT ============
+window.addEventListener('DOMContentLoaded', function(){
+  if (window.lucide) lucide.createIcons();
+  setupAudioEvents();
+  ensureDemoTracks();
+  loadSettings();
+  updateShuffleRepeatUI();
+
+  // Restore renamed titles
+  try {
+    recordingsList.forEach(function(t){
+      var saved = localStorage.getItem('vr_track_'+t.id+'_title');
+      if (saved) t.title = saved;
+    });
+  } catch(e) {}
+
+  setTimeout(function(){
+    var seen = null;
+    try { seen = localStorage.getItem('hasSeenOnboarding'); } catch(e) {}
+    if (seen==='true') navigateTo('screen-home'); else navigateTo('screen-onboarding-1');
+  }, 2000);
+
+  var bn = document.getElementById('bottomNavBar');
+  if (bn) { bn.classList.add('hidden'); bn.style.display='none'; }
+
+  window.addEventListener('beforeunload', function(e){ if (isRecording) { e.preventDefault(); e.returnValue=''; } });
+
+  // Enter key in rename input = save
+  var ri = document.getElementById('renameInput');
+  if (ri) ri.addEventListener('keydown', function(e){ if (e.key==='Enter') saveRename(); });
+});
+</script>
+
+</body>
+</html>
