@@ -21,18 +21,7 @@ jobs:
           cordova create myapp com.example.myapp "VoiceRecorder"
           rm -rf myapp/www/*
           cp index.html myapp/www/
-          
-          # लोगो को प्रोजेक्ट के सही स्थान पर कॉपी करना
-          if [ -f icon.png ]; then
-            cp icon.png myapp/www/icon.png
-          fi
-          
           cd myapp
-          
-          # कॉन्फ़िगरेशन फ़ाइल में लोगो का टैग सुरक्षित तरीके से डालना
-          echo '<icon src="www/icon.png" />' > logo.xml
-          sed -i '/<\/widget>/r logo.xml' config.xml
-          
           cordova platform add android
 
       - name: Build APK (For Testing)
