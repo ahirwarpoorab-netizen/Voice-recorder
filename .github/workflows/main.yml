@@ -1,4 +1,4 @@
-name: Build APK and AAB
+name: Build APK and AAB from Single File
 on: [push]
 
 jobs:
@@ -13,42 +13,42 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Create Project Folder
-        run: |
-          mkdir www
-          cp index.html www/
-          if [ -f icon.png ]; then cp icon.png www/; fi
+      - name: Install Cordova
+        run: npm install -g cordova
 
-      - name: Install Capacitor and Capacitor Assets
+      - name: Create Project
         run: |
-          npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets
-          npx cap init "VoiceRecorder" "com.example.myapp" --web-dir=www
-
-      - name: Add Android Platform
-        run: |
-          npx cap add android
-
-      - name: Generate App Icons Automatically
-        run: |
+          cordova create myapp com.example.myapp "VoiceRecorder"
+          rm -rf myapp/www/*
+          cp index.html myapp/www/
+          
+          # लोगो को प्रोजेक्ट के सही स्थान पर कॉपी करना
           if [ -f icon.png ]; then
-            mkdir -p assets
-            cp icon.png assets/icon-only.png
-            cp icon.png assets/icon-foreground.png
-            cp icon.png assets/icon-background.png
-            npx capacitor-assets generate --android
+            cp icon.png myapp/www/icon.png
           fi
+          
+          cd myapp
+          
+          # कॉन्फ़िगरेशन फ़ाइल में लोगो का टैग सुरक्षित तरीके से डालना
+          echo '<icon src="www/icon.png" />' > logo.xml
+          sed -i '/<\/widget>/r logo.xml' config.xml
+          
+          cordova platform add android
 
-      - name: Build Android App (APK & AAB)
+      - name: Build APK (For Testing)
         run: |
-          cd android
-          ./gradlew assembleDebug
-          ./gradlew bundleRelease
+          cd myapp
+          cordova build android --debug --max-workers=2
 
-      - name: Upload APK and AAB Files
+      - name: Build AAB (For Play Store)
+        run: |
+          cd myapp
+          cordova build android --release -- --packageType=bundle
+
+      - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
           name: Mobile-App-Files
           path: |
-            android/app/build/outputs/apk/debug/app-debug.apk
-            android/app/build/outputs/bundle/release/app-release.aab
+            myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+            myapp/platforms/android/app/build/outputs/bundle/release/app-release.aab
