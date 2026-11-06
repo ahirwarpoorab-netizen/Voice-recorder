@@ -23,7 +23,7 @@ jobs:
           cp index.html myapp/www/
           cp icon.png myapp/www/icon.png || true
           
-          # लोगो सेट करने के लिए config.xml में लाइन जोड़ना
+          # XML कॉन्फ़िगरेशन में लोगो जोड़ने के लिए
           sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' myapp/config.xml
           
           cd myapp
