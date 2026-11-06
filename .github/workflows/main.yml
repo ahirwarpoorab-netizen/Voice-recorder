@@ -21,6 +21,11 @@ jobs:
           cordova create myapp com.example.myapp "VoiceRecorder"
           rm -rf myapp/www/*
           cp index.html myapp/www/
+          cp icon.png myapp/www/icon.png || true
+          
+          # लोगो सेट करने के लिए config.xml में लाइन जोड़ना
+          sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' myapp/config.xml
+          
           cd myapp
           cordova platform add android
 
