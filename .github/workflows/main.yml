@@ -1,4 +1,4 @@
-name: Build APK and AAB from Single File
+name: Build APK and AAB
 on: [push]
 
 jobs:
@@ -13,36 +13,42 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Cordova
-        run: npm install -g cordova
-
-      - name: Create Project
+      - name: Create Project Folder
         run: |
-          cordova create myapp com.example.myapp "VoiceRecorder"
-          rm -rf myapp/www/*
-          cp index.html myapp/www/
-          cp icon.png myapp/www/icon.png || true
-          
-          # XML कॉन्फ़िगरेशन में लोगो जोड़ने के लिए
-          sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' myapp/config.xml
-          
-          cd myapp
-          cordova platform add android
+          mkdir www
+          cp index.html www/
+          if [ -f icon.png ]; then cp icon.png www/; fi
 
-      - name: Build APK (For Testing)
+      - name: Install Capacitor and Capacitor Assets
         run: |
-          cd myapp
-          cordova build android --debug --max-workers=2
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets
+          npx cap init "VoiceRecorder" "com.example.myapp" --web-dir=www
 
-      - name: Build AAB (For Play Store)
+      - name: Add Android Platform
         run: |
-          cd myapp
-          cordova build android --release -- --packageType=bundle
+          npx cap add android
 
-      - name: Upload Files
+      - name: Generate App Icons Automatically
+        run: |
+          if [ -f icon.png ]; then
+            mkdir -p assets
+            cp icon.png assets/icon-only.png
+            cp icon.png assets/icon-foreground.png
+            cp icon.png assets/icon-background.png
+            npx capacitor-assets generate --android
+          fi
+
+      - name: Build Android App (APK & AAB)
+        run: |
+          cd android
+          ./gradlew assembleDebug
+          ./gradlew bundleRelease
+
+      - name: Upload APK and AAB Files
         uses: actions/upload-artifact@v4
         with:
           name: Mobile-App-Files
           path: |
-            myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-            myapp/platforms/android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/bundle/release/app-release.aab
