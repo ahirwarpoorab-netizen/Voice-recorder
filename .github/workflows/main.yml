@@ -21,7 +21,18 @@ jobs:
           cordova create myapp com.example.myapp "VoiceRecorder"
           rm -rf myapp/www/*
           cp index.html myapp/www/
+          
           cd myapp
+          
+          # एंड्रॉइड को साफ़ तौर पर बताना कि ऐप को माइक रिकॉर्डिंग की परमिशन चाहिए
+          echo '<config-file target="AndroidManifest.xml" parent="/*">' > plugin_config.xml
+          echo '    <uses-permission android:name="android.permission.RECORD_AUDIO" />' >> plugin_config.xml
+          echo '    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' >> plugin_config.xml
+          echo '</config-file>' >> plugin_config.xml
+          
+          # config.xml फ़ाइल के अंदर परमिशन टैग्स को सुरक्षित तरीके से जोड़ना
+          sed -i '/<\/widget>/r plugin_config.xml' config.xml
+          
           cordova platform add android
 
       - name: Build APK (For Testing)
